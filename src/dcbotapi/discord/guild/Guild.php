@@ -2,11 +2,19 @@
 
 namespace dcbotapi\discord\guild;
 
+use dcbotapi\discord\other\MessageChannel;
+
 class Guild {
-    private $data = [], $roles = [];
+    private $data = [];
 
     /** @var Member[] $members */
     private $members = [];
+    /** @var Role[] $roles */
+    private $roles = [];
+    /** @var MessageChannel[] $textchannels */
+    private $textchannels = [];
+    /** @var VoiceChannel $voicechannels */
+    private $voicechannels = [];
 
     public function __construct(array $data){
         $this->data = $data;
@@ -20,6 +28,15 @@ class Guild {
                 $this->roles[$role["id"]] = new Role($role);
             }
         }
+        if(isset($data["channels"])){
+            foreach($data["channels"] as $index => $channel){
+                if($channel["type"] === 0){
+                    $this->textchannels[$channel["id"]] = new MessageChannel($channel);
+                }elseif($channel["type"] === 2){
+                    $this->voicechannels[$channel["id"]] = new VoiceChannel($channel);
+                }
+            }
+        }
     }
 
     public function getName(){
@@ -31,7 +48,7 @@ class Guild {
     }
 
     public function getRoles(): array{
-        return $this->roles["roles"];
+        return $this->roles;
     }
 
     public function getRoleById(string $id): ?Role{
@@ -44,6 +61,22 @@ class Guild {
 
     public function getMemberById(string $id): ?Member{
         return isset($this->members[$id]) ? $this->members[$id] : null;
+    }
+
+    public function getTextChannels(){
+        return $this->textchannels;
+    }
+
+    public function getTextChannelById(string $id): MessageChannel{
+        return $this->textchannels[$id];
+    }
+
+    public function getVoiceChannels(){
+        return $this->voicechannels;
+    }
+
+    public function getVoiceChannelById(string $id): VoiceChannel{
+        return $this->voicechannels[$id];
     }
 
     public function addMember(array $data){

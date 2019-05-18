@@ -302,9 +302,6 @@ class DiscordClient {
         $identify["properties"] = ["os" => PHP_OS, "browser" => "erkamkahriman/dcbotapi", "library" => "erkamkahriman/dcbotapi"];
         $identify["compress"] = false;
         $identify["shard"] = [$shard, $this->gwInfo["shards"]];
-        if(isset($this->myInfo["Game"])){
-            $identify["presence"] = ["game" => ["name" => $this->myInfo["Game"]["Name"], "type" => $this->myInfo["Game"]["Type"]]];
-        }
         $this->slowMessageQueue[] = [$shard, 2, $identify];
     }
 
@@ -502,34 +499,8 @@ class DiscordClient {
         Manager::getRequest("/channels/".$channel."/messages", $function)->end();
     }
 
-    public function sendChannelMessage(string $server, string $channel, string $message){
-        if(!$this->validChannel($server, $channel)){
-            return;
-        }
-
-        $sendMessage = [];
-        $sendMessage["content"] = $message;
-
-        $data = json_encode($sendMessage);
-        $headers = [];
-        $headers["content-length"] = strlen($data);
-        $headers["content-type"] = "application/json";
-
-        Manager::getRequest("/channels/".$channel."/messages", null, "POST", $headers)->end($data);
-    }
-
-    public function setUsername(string $username): void{
-        Manager::getRequest("/users/@me", null, "PATCH")->end(json_encode(["username" => $username]));
-        $this->myInfo["username"] = $username;
-    }
-
     public function getUsername(): string{
         return $this->myInfo["username"];
-    }
-
-    public function setGame(string $game, int $type = 0){
-        $this->myInfo["Game"]["Name"] = $game;
-        $this->myInfo["Game"]["Type"] = $type <= 2 ? $type : 0;
     }
 
     public function getGuildById(string $id): ?Guild{
@@ -537,6 +508,6 @@ class DiscordClient {
     }
 
     public function getGuilds(){
-        return array_values($this->guilds);
+        return array_keys($this->guilds);
     }
 }

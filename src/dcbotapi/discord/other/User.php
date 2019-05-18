@@ -33,28 +33,24 @@ class User {
     }
 
     public function sendMessage($message): void{
+        if(empty($message)) return;
         $data = json_encode(["recipient_id" => $this->getId()]);
-        $headers = [];
         $headers["content-length"] = strlen($data);
         $headers["content-type"] = "application/json";
         Manager::getRequest("/users/@me/channels", function($data) use ($message){
             $data = json_decode($data, true);
             if(!isset($data["id"])) return;
-            $this->sendUserChannelMessage($data["id"], $message);
-        }, "POST", $headers)->end($data);
-    }
-
-    public function sendUserChannelMessage(string $channelId, $message){
-        if($message instanceof EmbedMessage){
-            $sendMessage["embed"] = $message->toArray();
-        }else{
-            $sendMessage["content"] = $message;
-        }
-        $data = json_encode($sendMessage);
-        $headers = [];
-        $headers["content-length"] = strlen($data);
-        $headers["content-type"] = "application/json";;
-        Manager::getRequest("/channels/".$channelId."/messages", function($data){
+            $id = $data["id"];
+            if($message instanceof EmbedMessage){
+                $sendMessage["embed"] = $message->toArray();
+            }else{
+                $sendMessage["content"] = $message;
+            }
+            $data = json_encode($sendMessage);
+            $headers = [];
+            $headers["content-length"] = strlen($data);
+            $headers["content-type"] = "application/json";;
+            Manager::getRequest("/channels/".$id."/messages", null, "POST", $headers)->end($data);
         }, "POST", $headers)->end($data);
     }
 }

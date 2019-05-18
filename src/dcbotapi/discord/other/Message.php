@@ -9,7 +9,6 @@ class Message {
 
     public function __construct(array $data, MessageChannel $channel){
         $this->data = $data;
-        //var_dump($data);
         $this->author = new User($data["author"]);
         $this->channel = $channel;
     }
@@ -31,6 +30,6 @@ class Message {
     }
 
     public function delete(): void{
-        Manager::getRequest("/channels/{$this->getChannel()->getId()}/messages/".$this->getId())->end();
+        Manager::getRequest("/channels/{$this->getChannel()->getId()}/messages/".$this->getId(), null, "DELETE")->end();
     }
 }
