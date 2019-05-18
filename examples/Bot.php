@@ -39,7 +39,7 @@ $event->on("event.MESSAGE_CREATE", function(MessageEvent $event) use($client){
         return;
     }
     $client->log($author->getUsername()." => ".$msg->getContent());
-    $guild = $client->getGuildById("537415236232282112");
+    $guild = $client->getGuilds()[0];
     if($guild === null){
         return;
     }
@@ -50,8 +50,8 @@ $event->on("event.MESSAGE_CREATE", function(MessageEvent $event) use($client){
     $command = strtolower($args[0]);
     if($command === "!say"){
         if(isset($args[1], $args[2])){
-            unset($args[0], $args[1], $args[2]);
             $member = $guild->getMemberById($args[1]);
+            unset($args[0], $args[1], $args[2]);
             if($member !== null){
                 $message = implode(" ", $args);
                 $member->getUser()->sendMessage($message);

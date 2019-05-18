@@ -534,7 +534,7 @@ class DiscordClient {
         return isset($this->guilds[$id]) ? $this->guilds[$id] : null;
     }
 
-    public function getGuilds(): array{
+    public function getGuilds(){
         return $this->guilds;
     }
 }
