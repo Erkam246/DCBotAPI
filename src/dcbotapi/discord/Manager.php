@@ -15,7 +15,7 @@ class Manager {
         self::$eventHandler = new EventHandler($client);
     }
 
-    public static function getRequest(string $endpoint, ?callable $gotResponse = null, string $type = 'GET', array $headers = []): Request{
+    public static function getRequest(string $endpoint, ?callable $gotResponse = null, string $type = "GET", array $headers = []): Request{
         $headers["User-Agent"] = "ErkamKahriman/DCBotAPI (https://github.com/ErkamKahriman/DCBotAPI, 1.0)";
         $headers["Authorization"] = "Bot ".DiscordClient::$token;
 
