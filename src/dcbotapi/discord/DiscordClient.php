@@ -355,6 +355,7 @@ class DiscordClient {
         switch($eventName){
             case "event.MESSAGE_CREATE":
             case "event.MESSAGE_UPDATE":
+                if(!isset($eventData["author"])) return;
                 $channelId = $eventData["channel_id"];
                 Manager::getRequest("/channels/".$channelId, function($channelData) use($eventData, $eventName, $eventHandler){
                     $messageEvent = new MessageEvent($eventData, json_decode($channelData, true));

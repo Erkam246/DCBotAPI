@@ -4,15 +4,13 @@ namespace dcbotapi\discord\other;
 
 use dcbotapi\discord\Manager;
 
-use function var_dump;
-
 class Message {
     private $data = [], $author, $channel;
 
     public function __construct(array $data, MessageChannel $channel){
         $this->data = $data;
         //var_dump($data);
-        $this->author = new Author($data["author"] ?? var_dump($data));
+        $this->author = new User($data["author"]);
         $this->channel = $channel;
     }
 
@@ -20,7 +18,7 @@ class Message {
         return $this->data["content"];
     }
 
-    public function getAuthor(): Author{
+    public function getAuthor(): User{
         return $this->author;
     }
 

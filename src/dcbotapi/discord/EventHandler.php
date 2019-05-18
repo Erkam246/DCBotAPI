@@ -62,5 +62,6 @@ class EventHandler extends EventEmitter {
         $this->on("event.VOICE_STATE_UPDATE", [$client, "noop"]);
         $this->on("event.VOICE_SERVER_UPDATE", [$client, "noop"]);
         $this->on("event.WEBHOOKS_UPDATE", [$client, "noop"]);
+        $this->on("event.PRESENCES_REPLACE", [$client, 'noop']);
     }
 }

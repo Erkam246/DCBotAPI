@@ -2,9 +2,9 @@
 
 namespace dcbotapi\discord\event;
 
-use dcbotapi\discord\other\Author;
 use dcbotapi\discord\other\Message;
 use dcbotapi\discord\other\MessageChannel;
+use dcbotapi\discord\other\User;
 
 class MessageEvent {
     private $data = [], $message, $channel;
@@ -15,7 +15,7 @@ class MessageEvent {
         $this->data = $data;
     }
 
-    public function getAuthor(): Author{
+    public function getAuthor(): User{
         return $this->getMessage()->getAuthor();
     }
 
