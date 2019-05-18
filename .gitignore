@@ -1,0 +1,7 @@
+vendor
+*.xml
+*.iml
+bin/*
+composer.phar
+composer.lock
+Bot.php
