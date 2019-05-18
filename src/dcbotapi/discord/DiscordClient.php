@@ -3,6 +3,8 @@
 namespace dcbotapi\discord;
 
 use dcbotapi\discord\event\MessageEvent;
+use dcbotapi\discord\guild\Guild;
+use dcbotapi\discord\other\User;
 
 use React\HttpClient\Client as HTTPClient;
 use React\EventLoop\Factory as EventLoopFactory;
@@ -24,6 +26,7 @@ use function array_shift;
 use function call_user_func_array;
 use function is_array;
 use function var_dump;
+use function count;
 
 class DiscordClient {
     /** @var LoopInterface LoopInterface */
@@ -38,7 +41,9 @@ class DiscordClient {
     /** @var HTTPClient ?$httpClient */
     public static $httpClient = null;
 
-    private $gwInfo = [], $myInfo = [], $shards = [], $slowMessageQueue = [], $guilds = [], $personChannels = [];
+    /** @var Guild[] $guilds */
+    private $guilds = [];
+    private $gwInfo = [], $myInfo = [], $shards = [], $slowMessageQueue = [], $personChannels = [];
 
     private $connectTime = 0, $lasthb = 0;
 
@@ -180,6 +185,7 @@ class DiscordClient {
         if($startLoop){
             $this->getLoopInterface()->run();
         }
+
         $this->lasthb = time();
     }
 
@@ -194,7 +200,6 @@ class DiscordClient {
             $item["conn"]->close();
             unset($item["heartbeat_interval"]);
         }
-
         $this->reset();
     }
 
@@ -269,7 +274,13 @@ class DiscordClient {
         if(empty(Manager::getEventHandler()->listeners("opcode.".$opcode))){
             $this->log("Got Unknown Message on shard ".$shard." - ".$opcode);
         }
-        $this->doEmit("opcode.".$opcode, [$shard, $opcode, $data]);
+        switch($opcode){
+            case 0:
+                $this->doEmit("opcode.".$opcode, [$shard, $data]);
+                break;
+            default:
+                $this->doEmit("opcode.".$opcode, [$shard, $opcode, $data]);
+        }
     }
 
     public function gotInvalidSession(int $shard, int $opcode, array $data): void{
@@ -312,13 +323,10 @@ class DiscordClient {
             if($this->shards[$shard]["timerID"] != $timerID){
                 return;
             }
-
             if($this->shards[$shard]["sentHB"]){
-
                 $this->shards[$shard]["conn"]->close();
             }else{
                 $this->shards[$shard]["sentHB"] = true;
-
                 $this->sendShardMessage($shard, 1, $this->shards[$shard]["seq"]);
                 $this->scheduleHeartbeat($shard);
             }
@@ -331,7 +339,7 @@ class DiscordClient {
     public function gotHeartBeatAck(int $shard, int $opcode, array $data){
     }
 
-    public function gotDispatch(int $shard, int $opcode, array $data){
+    public function gotDispatch(int $shard, array $data){
         $this->shards[$shard]["seq"] = $data["s"];
         $event = $data["t"];
         $eventData = $data["d"];
@@ -349,14 +357,23 @@ class DiscordClient {
                 $eventHandler->emit($eventName, [$messageEvent]);
                 break;
             case "event.READY":
-                $eventHandler->emit($eventName, [$shard]);
+                //var_dump($data);
+                $eventHandler->emit($eventName, [$shard, $data["d"]["guilds"]]);
+                break;
+            case "event.GUILD_CREATE":
+            case "event.GUILD_UPDATE":
+                $eventHandler->emit($eventName, [$data["d"]]);
+                break;
+            case "event.GUILD_MEMBER_ADD":
+            case "event.GUILD_MEMBER_REMOVE":
+                $eventHandler->emit($eventName, [$data["d"]]);
                 break;
             default:
-                $eventHandler->emit($eventName, [$this, $shard, $event, $eventData]);
+                $eventHandler->emit($eventName, [$shard, $event, $eventData]);
         }
     }
 
-    public function noop(DiscordClient $client, int $shard, string $event, array $data){
+    public function noop(int $shard, string $event, array $data){
         switch($event){
             case "":
                 $this->log($event);
@@ -364,39 +381,33 @@ class DiscordClient {
         }
     }
 
-    public function handleReadyEvent(int $shard){
+    public function handleReadyEvent(int $shard, array $guilds = []){
         $this->shards[$shard]["ready"] = true;
-    }
-
-    public function handleMessageEvent(DiscordClient $client, Author $author, $message){
-
-    }
-
-    public function handleGuildCreate(DiscordClient $client, int $shard, string $event, array $data){
-        $guildData = [];
-        $guildData["name"] = $data["name"];
-        $guildData["shard"] = $shard;
-        $guildData["channels"] = [];
-
-        $this->doEmit("DiscordClient.message", ["Found new server on shard ".$shard.": ".$guildData["name"]." (".$data["id"].")"]);
-
-        foreach($data["channels"] as $channel){
-            if($channel["type"] === "0"){
-                $guildData["channels"][$channel["id"]] = [];
-                $guildData["channels"][$channel["id"]]["name"] = $channel["name"];
-
-                $this->doEmit("DiscordClient.message", ["\t"."Channel: ".$channel["name"]." (".$channel["id"].")"]);
-            }
+        foreach($guilds as $guild){
+            $id = $guild["id"];
+            Manager::getRequest("/guilds/".$id, function($data) use($id){
+                $this->guilds[$id] = new Guild(json_decode($data, true));
+            })->end();
         }
-
-        $this->guilds[$data["id"]] = $guildData;
     }
 
-    public function handleGuildDelete(DiscordClient $client, int $shard, string $event, array $data){
-        if(isset($this->guilds[$data["id"]])){
-            $this->doEmit("DiscordClient.message", ["Removed server on shard ".$shard, ": ".$this->guilds[$data["id"]]["name"]." (".$data["id"].")"]);
+    public function handleGuildData(array $guildData): void{
+        $this->guilds[$guildData["id"]] = new Guild($guildData);
+    }
 
-            unset($this->guilds[$data["id"]]);
+    public function handleGuildMemberAdd(array $data): void{
+        $this->getGuildById($data["guild_id"])->addMember($data);
+        $this->log(count($this->getGuildById($data["guild_id"])->getMembers()));
+    }
+
+    public function handleGuildMemberRemove($data){
+        $this->getGuildById($data["guild_id"])->removeMember($data["user"]["id"]);
+        $this->log(count($this->getGuildById($data["guild_id"])->getMembers()));
+    }
+
+    public function handleGuildDelete(string $id): void{
+        if(isset($this->guilds[$id])){
+            unset($this->guilds[$id]);
         }
     }
 
@@ -413,7 +424,7 @@ class DiscordClient {
             $this->guilds[$guildID]["channels"][$chanID]["name"] = $data["name"];
 
             $this->doEmit("DiscordClient.message", ["Found new channel for server ".$this->guilds[$guildID]["name"]." (".$guildID.") on shard ".$shard.": ".$data["name"]." (".$chanID.")"]);
-        }else if($data["type"] == "1"){
+        }elseif($data["type"] == "1"){
             $person = $data["recipients"][0];
             if(isset($this->personChannels[$person["id"]])){
                 return;
@@ -429,15 +440,11 @@ class DiscordClient {
             $guildID = $data["guild_id"];
             $chanID = $data["id"];
             unset($this->guilds[$guildID]["channels"][$chanID]);
-
-            $this->doEmit("DiscordClient.message", ["Removed channel on server ".$this->guilds[$guildID]["name"]." (".$guildID.") on shard ".$shard.": ".$data["name"]." (".$chanID.")"]);
         }elseif($data["type"] == "1"){
             $person = $data["recipients"][0];
             unset($this->personChannels[$person["id"]]);
-            $this->doEmit("DiscordClient.message", ["Removed channel for person ".$person["username"]."#".$person["discriminator"]." (".$person["id"].") on shard ".$shard.": ".$data["id"]]);
-        }else{
-            $this->doEmit("DiscordClient.message", ["Removed channel on shard ".$shard, $data]);
         }
+        var_dump("DELETED CHANNEL");
     }
 
     public function shardClosed(int $shard, $code = null, $reason = null){
@@ -539,5 +546,13 @@ class DiscordClient {
 
     public function getUsername(): string{
         return $this->myInfo["username"];
+    }
+
+    public function getGuildById(string $id): ?Guild{
+        return isset($this->guilds[$id]) ? $this->guilds[$id] : null;
+    }
+
+    public function getGuilds(): array{
+        return $this->guilds;
     }
 }

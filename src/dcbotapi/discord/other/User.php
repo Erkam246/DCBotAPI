@@ -1,11 +1,11 @@
 <?php
 
-namespace dcbotapi\discord;
+namespace dcbotapi\discord\other;
 
-class Author {
-    private $data = [];
+class User {
+    public $data = [];
 
-    public function __construct(array $data){
+    public function __construct(string $data){
         $this->data = $data;
     }
 
@@ -13,12 +13,12 @@ class Author {
         return $this->data["id"];
     }
 
-    public function getUsername(): string{
-        return $this->data["username"];
-    }
-
     public function isBot(): bool{
         return (isset($this->data["bot"]) && $this->data["bot"]);
+    }
+
+    public function getUsername(): string{
+        return $this->data["username"];
     }
 
     public function getAvatar(): string{

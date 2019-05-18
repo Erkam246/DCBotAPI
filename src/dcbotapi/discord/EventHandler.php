@@ -19,7 +19,7 @@ class EventHandler extends EventEmitter {
         $this->on("opcode.7", [$client, "gotReconnectRequest"]);
         $this->on("opcode.9", [$client, "gotInvalidSession"]);
         $this->on("opcode.10", [$client, "gotHello"]);
-        $this->on("opcode.11", [$client, "gotHeartbeatACK"]);
+        $this->on("opcode.11", [$client, "gotHeartBeatAck"]);
 
         // General Server Events
         $this->on("event.READY", [$client, "handleReadyEvent"]);
@@ -31,16 +31,16 @@ class EventHandler extends EventEmitter {
         $this->on("event.CHANNEL_PINS_UPDATE", [$client, "noop"]);
 
         // Guild Events
-        $this->on("event.GUILD_CREATE", [$client, "handleGuildCreate"]);
-        $this->on("event.GUILD_UPDATE", [$client, "noop"]);
+        $this->on("event.GUILD_CREATE", [$client, "handleGuildData"]);
+        $this->on("event.GUILD_UPDATE", [$client, "handleGuildData"]);
         $this->on("event.GUILD_DELETE", [$client, "handleGuildDelete"]);
         $this->on("event.GUILD_ROLE_CREATE", [$client, "noop"]);
         $this->on("event.GUILD_ROLE_UPDATE", [$client, "noop"]);
         $this->on("event.GUILD_ROLE_DELETE", [$client, "noop"]);
-        $this->on("event.GUILD_MEMBER_ADD", [$client, "noop"]);
+        $this->on("event.GUILD_MEMBER_ADD", [$client, "handleGuildMemberAdd"]);
         $this->on("event.GUILD_MEMBERS_CHUNK", [$client, "noop"]);
         $this->on("event.GUILD_MEMBER_UPDATE", [$client, "noop"]);
-        $this->on("event.GUILD_MEMBER_REMOVE", [$client, "noop"]);
+        $this->on("event.GUILD_MEMBER_REMOVE", [$client, "handleGuildMemberRemove"]);
         $this->on("event.GUILD_BAN_ADD", [$client, "noop"]);
         $this->on("event.GUILD_BAN_REMOVE", [$client, "noop"]);
         $this->on("event.GUILD_EMOJIS_UPDATE", [$client, "noop"]);
@@ -57,7 +57,7 @@ class EventHandler extends EventEmitter {
 
         // Other events
         $this->on("event.PRESENCE_UPDATE", [$client, "noop"]);
-        $this->on("event.TYPING_START", [$client, "noop"]);
+        $this->on("event.TYPING_START", [$client, 'noop']);
         $this->on("event.USER_UPDATE", [$client, "noop"]);
         $this->on("event.VOICE_STATE_UPDATE", [$client, "noop"]);
         $this->on("event.VOICE_SERVER_UPDATE", [$client, "noop"]);

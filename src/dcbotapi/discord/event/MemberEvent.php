@@ -2,17 +2,17 @@
 
 namespace dcbotapi\discord\event;
 
-use dcbotapi\discord\other\Author;
+use dcbotapi\discord\Member;
 
-class MessageEvent {
+class MemberEvent {
     private $data = [];
 
     public function __construct(array $data){
         $this->data = $data;
     }
 
-    public function getAuthor(): Author{
-        return new Author($this->data["author"]);
+    public function getMember(): Member{
+        return new Member($this->data["member"]);
     }
 
     public function getMessage(){
