@@ -28,6 +28,7 @@ use function is_array;
 use function var_dump;
 use function date_default_timezone_set;
 use function is_callable;
+use function php_sapi_name;
 
 class DiscordClient {
     /** @var LoopInterface LoopInterface */
@@ -62,7 +63,7 @@ class DiscordClient {
 
         new Manager($this);
         $this->eventHandler = Manager::getEventHandler();
-        
+
         self::$clientID = $clientID;
         self::$clientSecret = $clientSecret;
         self::$token = $token;
@@ -129,6 +130,9 @@ class DiscordClient {
      * @throws Exception
      */
     public function connect(){
+        if(php_sapi_name() !== "cli"){
+            throw new Exception("Please run this Script via CLI.");
+        }
         if(self::$httpClient !== null){
             throw new Exception("Already connected.");
         }
