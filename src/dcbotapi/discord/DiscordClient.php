@@ -2,6 +2,8 @@
 
 namespace dcbotapi\discord;
 
+use function array_keys;
+use function array_values;
 use dcbotapi\discord\event\MessageEvent;
 use dcbotapi\discord\guild\Guild;
 use dcbotapi\discord\other\User;
@@ -535,6 +537,6 @@ class DiscordClient {
     }
 
     public function getGuilds(){
-        return $this->guilds;
+        return array_values($this->guilds);
     }
 }
