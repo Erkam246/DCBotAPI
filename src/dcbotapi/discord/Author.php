@@ -22,6 +22,6 @@ class Author {
     }
 
     public function getAvatar(): string{
-        return $this->data["avatar"];
+        return "https://cdn.discordapp.com/avatars/".$this->getId()."/".$this->data["avatar"];
     }
 }

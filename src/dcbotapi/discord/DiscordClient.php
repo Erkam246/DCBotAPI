@@ -17,7 +17,6 @@ use Exception;
 use function random_bytes;
 use function json_decode;
 use function json_encode;
-use function str_replace;
 use function strlen;
 use function bin2hex;
 use function time;
@@ -132,10 +131,11 @@ class DiscordClient {
 
     public function ColorLog($message, int $color){
         $colors = [1 => "0;34", 2 => "0;31"];
-        if(isset($colors[$color]))
+        if(isset($colors[$color])){
             echo "\033[".$colors[$color]."m".$message."\033[0m \n";
-        else
+        }else{
             echo $message."\n";
+        }
     }
 
     private function reset(){
@@ -502,16 +502,12 @@ class DiscordClient {
     }
 
     public function shardClosed(int $shard, $code = null, $reason = null){
-        $this->doEmit('DiscordClient.debugMessage', ['Shard '.$shard.' closed ('.$code.' - '.$reason.')']);
-
+        $this->log("Shard ".$shard." closed (".$code." - ".$reason.")");
         if(!$this->disconnecting){
-            $reconnectTime = 5;
-
             if($code == 4003 || $code == 4004){
-                $this->doEmit('DiscordClient.message', ['Error Connecting - authentication error - not attempting to reconnect.']);
+                $this->log("Error Connecting - authentication error - not attempting to reconnect.");
             }else{
-                $this->getLoopInterface()->addTimer($reconnectTime, function() use ($shard){
-                    $this->doEmit('DiscordClient.debugMessage', ['Reconnecting shard: '.$shard]);
+                $this->getLoopInterface()->addTimer(3, function() use ($shard){
                     $this->connectShard($shard);
                 });
             }
@@ -524,7 +520,7 @@ class DiscordClient {
         }
 
         foreach($this->shards as $shard){
-            if(!$shard['ready']){
+            if(!$shard["ready"]){
                 return false;
             }
         }
