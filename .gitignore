@@ -4,4 +4,4 @@ vendor
 bin/*
 composer.phar
 composer.lock
-Bot.php
+/Bot.php
