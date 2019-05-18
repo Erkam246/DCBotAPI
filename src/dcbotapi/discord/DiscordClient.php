@@ -2,7 +2,7 @@
 
 namespace dcbotapi\discord;
 
-use dcbotapi\discord\events\MessageEvent;
+use dcbotapi\discord\event\MessageEvent;
 
 use React\HttpClient\Client as HTTPClient;
 use React\EventLoop\Factory as EventLoopFactory;

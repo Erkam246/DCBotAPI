@@ -1,6 +1,6 @@
 <?php
 
-namespace dcbotapi\discord\events;
+namespace dcbotapi\discord\event;
 
 use dcbotapi\discord\Author;
 
