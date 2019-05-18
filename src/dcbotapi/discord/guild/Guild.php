@@ -2,8 +2,6 @@
 
 namespace dcbotapi\discord\guild;
 
-use function var_dump;
-
 class Guild {
     private $data = [], $members = [], $roles = [];
 

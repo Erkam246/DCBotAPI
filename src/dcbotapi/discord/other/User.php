@@ -37,9 +37,9 @@ class User {
         $headers = [];
         $headers["content-length"] = strlen($data);
         $headers["content-type"] = "application/json";
-
         Manager::getRequest("/users/@me/channels", function($data) use ($message){
             $data = json_decode($data, true);
+            if(!isset($data["id"])) return;
             $this->sendUserChannelMessage($data["id"], $message);
         }, "POST", $headers)->end($data);
     }
@@ -50,12 +50,10 @@ class User {
         }else{
             $sendMessage["content"] = $message;
         }
-
         $data = json_encode($sendMessage);
         $headers = [];
         $headers["content-length"] = strlen($data);
         $headers["content-type"] = "application/json";;
-
         Manager::getRequest("/channels/".$channelId."/messages", function($data){
         }, "POST", $headers)->end($data);
     }
