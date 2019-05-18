@@ -58,7 +58,7 @@ class DiscordClient {
      * @param $token
      */
     public function __construct($clientID, $clientSecret, $token){
-        new Manager();
+        new Manager($this);
         $this->eventHandler = Manager::getEventHandler();
 
         self::$clientID = $clientID;
