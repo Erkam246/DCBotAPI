@@ -72,7 +72,7 @@ class DiscordClient {
 
     //TODO replace characters
     public function ColorLog($message, int $color){
-        $colors = [1 => "0;34", 2 => "0;31"];
+        $colors = [1 => "0;34", 2 => "0;31", 3 => "1;32", 4 => "1;33"];
         if(isset($colors[$color])){
             echo "\033[".$colors[$color]."m".$message."\033[0m \n";
         }else{
