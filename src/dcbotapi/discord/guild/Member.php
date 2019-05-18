@@ -5,10 +5,11 @@ namespace dcbotapi\discord\guild;
 use dcbotapi\discord\other\User;
 
 class Member {
-    private $data = [];
+    private $data = [], $user;
 
     public function __construct(array $data){
         $this->data = $data;
+        $this->user = new User($this->data["user"]);
     }
 
     public function getId(): string{
@@ -32,6 +33,6 @@ class Member {
     }
 
     public function getUser(){
-        return new User($this->data["user"]);
+        return $this->user;
     }
 }

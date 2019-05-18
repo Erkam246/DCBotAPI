@@ -12,7 +12,6 @@ class Guild {
         if(isset($data["members"])){
             foreach($data["members"] as $index => $member){
                 $this->members[$member["user"]["id"]] = new Member($member);
-                var_dump("123");
             }
         }
         if(isset($data["roles"])){

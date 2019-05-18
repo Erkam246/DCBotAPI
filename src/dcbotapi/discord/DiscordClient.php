@@ -26,7 +26,7 @@ use function array_shift;
 use function call_user_func_array;
 use function is_array;
 use function var_dump;
-use function count;
+use function date_default_timezone_set;
 
 class DiscordClient {
     /** @var LoopInterface LoopInterface */
@@ -59,6 +59,7 @@ class DiscordClient {
      * @param $token
      */
     public function __construct($clientID, $clientSecret, $token){
+        date_default_timezone_set("Europe/Berlin");
         new Manager($this);
         $this->eventHandler = Manager::getEventHandler();
 
@@ -274,6 +275,7 @@ class DiscordClient {
         if(empty(Manager::getEventHandler()->listeners("opcode.".$opcode))){
             $this->log("Got Unknown Message on shard ".$shard." - ".$opcode);
         }
+
         switch($opcode){
             case 0:
                 $this->doEmit("opcode.".$opcode, [$shard, $data]);
@@ -353,11 +355,13 @@ class DiscordClient {
         switch($eventName){
             case "event.MESSAGE_CREATE":
             case "event.MESSAGE_UPDATE":
-                $messageEvent = new MessageEvent($eventData);
-                $eventHandler->emit($eventName, [$messageEvent]);
+                $channelId = $eventData["channel_id"];
+                Manager::getRequest("/channels/".$channelId, function($channelData) use($eventData, $eventName, $eventHandler){
+                    $messageEvent = new MessageEvent($eventData, json_decode($channelData, true));
+                    $eventHandler->emit($eventName, [$messageEvent]);
+                })->end();
                 break;
             case "event.READY":
-                //var_dump($data);
                 $eventHandler->emit($eventName, [$shard, $data["d"]["guilds"]]);
                 break;
             case "event.GUILD_CREATE":
@@ -385,8 +389,10 @@ class DiscordClient {
         $this->shards[$shard]["ready"] = true;
         foreach($guilds as $guild){
             $id = $guild["id"];
-            Manager::getRequest("/guilds/".$id, function($data) use($id){
-                $this->guilds[$id] = new Guild(json_decode($data, true));
+            Manager::getRequest("/guilds/".$id, function($data) use ($id){
+                if(!isset($this->guilds[$id])){
+                    $this->guilds[$id] = new Guild(json_decode($data, true));
+                }
             })->end();
         }
     }
@@ -397,12 +403,10 @@ class DiscordClient {
 
     public function handleGuildMemberAdd(array $data): void{
         $this->getGuildById($data["guild_id"])->addMember($data);
-        $this->log(count($this->getGuildById($data["guild_id"])->getMembers()));
     }
 
     public function handleGuildMemberRemove($data){
         $this->getGuildById($data["guild_id"])->removeMember($data["user"]["id"]);
-        $this->log(count($this->getGuildById($data["guild_id"])->getMembers()));
     }
 
     public function handleGuildDelete(string $id): void{
@@ -444,7 +448,6 @@ class DiscordClient {
             $person = $data["recipients"][0];
             unset($this->personChannels[$person["id"]]);
         }
-        var_dump("DELETED CHANNEL");
     }
 
     public function shardClosed(int $shard, $code = null, $reason = null){
@@ -486,8 +489,8 @@ class DiscordClient {
         return true;
     }
 
-    public function getUser(string $id): User{
-        return new User($id);
+    public function getUserById(): User{
+        return new User([]);
     }
 
     public function getChannelMessages(string $server, string $channel, callable $function){
@@ -511,32 +514,6 @@ class DiscordClient {
         $headers["content-type"] = "application/json";
 
         Manager::getRequest("/channels/".$channel."/messages", null, "POST", $headers)->end($data);
-    }
-
-    public function sendPersonMessage(string $person, string $message){
-        //if(!$this->validPerson($person)){ return; }
-
-        $data = json_encode(["recipient_id" => $person]);
-        $headers = [];
-        $headers["content-length"] = strlen($data);
-        $headers["content-type"] = "application/json";
-
-        Manager::getRequest("/users/@me/channels", function($data) use ($message){
-            $data = json_decode($data, true);
-            $this->sendPersonChannelMessage($data["id"], $message);
-        }, "POST", $headers)->end($data);
-    }
-
-    public function sendPersonChannelMessage(string $personChannel, string $message){
-        $sendMessage = [];
-        $sendMessage["content"] = $message;
-
-        $data = json_encode($sendMessage);
-        $headers = [];
-        $headers["content-length"] = strlen($data);
-        $headers["content-type"] = "application/json";
-
-        Manager::getRequest("/channels/".$personChannel."/messages", null, "POST", $headers)->end($data);
     }
 
     public function setUsername(string $username): void{

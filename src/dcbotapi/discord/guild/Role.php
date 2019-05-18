@@ -3,7 +3,9 @@
 namespace dcbotapi\discord\guild;
 
 class Role {
-    public $data = [];
+    private $data = [];
+
+    public const DEFAULT_COLOR = 0;
 
     public function __construct(array $data){
         $this->data = $data;
