@@ -3,7 +3,10 @@
 namespace dcbotapi\discord\guild;
 
 class Guild {
-    private $data = [], $members = [], $roles = [];
+    private $data = [], $roles = [];
+
+    /** @var Member[] $members */
+    private $members = [];
 
     public function __construct(array $data){
         $this->data = $data;
@@ -35,7 +38,7 @@ class Guild {
         return isset($this->roles[$id]) ? $this->roles[$id] : null;
     }
 
-    public function getMembers(): array{
+    public function getMembers(){
         return $this->members;
     }
 

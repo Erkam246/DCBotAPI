@@ -62,7 +62,7 @@ class DiscordClient {
 
         new Manager($this);
         $this->eventHandler = Manager::getEventHandler();
-
+        
         self::$clientID = $clientID;
         self::$clientSecret = $clientSecret;
         self::$token = $token;
@@ -78,7 +78,7 @@ class DiscordClient {
         if(isset($colors[$color])){
             echo "\033[".$colors[$color]."m".$message."\033[0m \n";
         }else{
-            echo $message."\n";
+            $this->log($message);
         }
     }
 
@@ -154,6 +154,7 @@ class DiscordClient {
                 $this->connectToGateway($this->gwInfo["shards"]);
             }else{
                 $this->log("Unknown response from API");
+                exit();
             }
         })->end();
 
@@ -168,7 +169,7 @@ class DiscordClient {
                 $message = array_shift($this->slowMessageQueue);
                 if(is_array($message)){
                     call_user_func_array([$this, "sendShardMessage"], $message);
-                }else if(is_callable($message)){
+                }elseif(is_callable($message)){
                     call_user_func_array($message, []);
                 }
             }
@@ -449,7 +450,7 @@ class DiscordClient {
         $this->log("Shard ".$shard." closed (".$code." - ".$reason.")");
         if(!$this->disconnecting){
             if($code == 4003 || $code == 4004){
-                $this->log("Error Connecting - authentication error - not attempting to reconnect.");
+                $this->ColorLog("Authentication error - not attempting to reconnect.", 2);
             }else{
                 $this->getLoopInterface()->addTimer(3, function() use ($shard){
                     $this->connectShard($shard);
@@ -480,7 +481,7 @@ class DiscordClient {
         return isset($this->guilds[$server]["channels"][$target]);
     }
 
-    public function validUser(string $id): bool{
+    public function validUser(): bool{
         return true;
     }
 
@@ -520,7 +521,7 @@ class DiscordClient {
         return $this->myInfo["username"];
     }
 
-    public function setGame(string $game, int $type){
+    public function setGame(string $game, int $type = 0){
         $this->myInfo["Game"]["Name"] = $game;
         $this->myInfo["Game"]["Type"] = $type <= 2 ? $type : 0;
     }
