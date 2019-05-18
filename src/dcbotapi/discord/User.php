@@ -3,7 +3,6 @@
 namespace dcbotapi\discord;
 
 use function json_decode;
-use function var_dump;
 
 class User {
     public $id = "", $username = null;
