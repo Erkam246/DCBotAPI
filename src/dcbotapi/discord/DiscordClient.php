@@ -102,17 +102,14 @@ class DiscordClient {
      * Set the message loop to use.
      *
      * @param LoopInterface $loopInterface
-     * @return self
      * @throws Exception
      */
-    public function setLoopInterface(LoopInterface $loopInterface){
+    public function setLoopInterface(LoopInterface $loopInterface): void{
         if(self::$httpClient !== null){
-            throw new Exception('Already connected.');
+            throw new Exception("Already connected.");
         }
 
         $this->loopInterface = $loopInterface;
-
-        return $this;
     }
 
     /**
@@ -231,7 +228,7 @@ class DiscordClient {
         $connector($this->gwInfo['url'].'/?v=6&encoding=json')->then(function(WebSocket $conn) use ($shard){
             $this->doEmit('DiscordClient.debugMessage', ['Connected shard: '.$shard]);
 
-            $this->shards[$shard] = ['conn' => $conn, 'seq' => null, 'ready' => false];
+            $this->shards[$shard] = ["conn" => $conn, 'seq' => null, 'ready' => false];
             $this->doEmit('shard.connected', [$shard]);
 
             $conn->on('message', function(RatchetMessageInterface $msg) use ($shard, $conn){
@@ -255,13 +252,15 @@ class DiscordClient {
     }
 
     public function sendShardMessage(int $shard, int $opcode, $data, $sequence = null, $eventName = null){
-        $sendData = ['op' => $opcode, 'd' => $data];
+        $sendData = ["op" => $opcode, "d" => $data];
         if($opcode == 0){
-            $sendData['s'] = $sequence;
-            $sendData['t'] = $eventName;
+            $sendData["s"] = $sequence;
+            $sendData["t"] = $eventName;
         }
 
-        $this->shards[$shard]['conn']->send(json_encode($sendData));
+        /** @var WebSocket $conn */
+        $conn = $this->shards[$shard]["conn"];
+        $conn->send(json_encode($sendData));
     }
 
     public function gotMessage(int $shard, RatchetMessageInterface $msg){
@@ -271,7 +270,7 @@ class DiscordClient {
         $opcode = $data['op'];
 
         if(empty(Manager::getEventHandler()->listeners('opcode.'.$opcode))){
-            $this->log('Got Unknown Message on shard '.$shard." - ".$msg->getPayload());
+            $this->log("Got Unknown Message on shard ".$shard, 1);
         }
 
         $this->doEmit('opcode.'.$opcode, [$shard, $opcode, $data]);
