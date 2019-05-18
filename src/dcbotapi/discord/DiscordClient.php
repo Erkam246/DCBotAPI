@@ -64,65 +64,6 @@ class DiscordClient {
         self::$clientID = $clientID;
         self::$clientSecret = $clientSecret;
         self::$token = $token;
-
-        // Connection Handling
-        $this->eventHandler->on('shard.closed', [$this, 'shardClosed']);
-        $this->eventHandler->on('shard.message', [$this, 'gotMessage']);
-        //$this->eventHandler->on("shard.connected", [$this, 'noop']);
-
-        // OPCODE handling
-        $this->eventHandler->on('opcode.0', [$this, 'gotDispatch']);
-        $this->eventHandler->on('opcode.1', [$this, 'gotHeartBeat']);
-        // ...
-        $this->eventHandler->on('opcode.7', [$this, 'gotReconnectRequest']);
-        // ...
-        $this->eventHandler->on('opcode.9', [$this, 'gotInvalidSession']);
-        $this->eventHandler->on('opcode.10', [$this, 'gotHello']);
-        $this->eventHandler->on('opcode.11', [$this, 'gotHeartBeatAck']);
-
-        // General Server Events
-        $this->eventHandler->on('event.READY', [$this, 'handleReadyEvent']);
-
-        // Guild Events
-        $this->eventHandler->on('event.GUILD_CREATE', [$this, 'handleGuildCreate']);
-        $this->eventHandler->on('event.GUILD_UPDATE', [$this, 'noop']);
-        $this->eventHandler->on('event.GUILD_DELETE', [$this, 'handleGuildDelete']);
-        $this->eventHandler->on('event.GUILD_ROLE_CREATE', [$this, 'noop']);
-        $this->eventHandler->on('event.GUILD_ROLE_UPDATE', [$this, 'noop']);
-        $this->eventHandler->on('event.GUILD_ROLE_DELETE', [$this, 'noop']);
-        $this->eventHandler->on('event.GUILD_MEMBER_ADD', [$this, 'noop']);
-        $this->eventHandler->on('event.GUILD_MEMBERS_CHUNK', [$this, 'noop']);
-        $this->eventHandler->on('event.GUILD_MEMBER_UPDATE', [$this, 'noop']);
-        $this->eventHandler->on('event.GUILD_MEMBER_REMOVE', [$this, 'noop']);
-        $this->eventHandler->on('event.GUILD_BAN_ADD', [$this, 'noop']);
-        $this->eventHandler->on('event.GUILD_BAN_REMOVE', [$this, 'noop']);
-        $this->eventHandler->on('event.GUILD_EMOJIS_UPDATE', [$this, 'noop']);
-        $this->eventHandler->on('event.GUILD_INTEGRATIONS_UPDATE', [$this, 'noop']);
-
-        // Channel Events
-        $this->eventHandler->on('event.CHANNEL_CREATE', [$this, 'noop']);
-        $this->eventHandler->on('event.CHANNEL_UPDATE', [$this, 'noop']);
-        $this->eventHandler->on('event.CHANNEL_DELETE', [$this, 'handleChannelDelete']);
-        $this->eventHandler->on('event.CHANNEL_PINS_UPDATE', [$this, 'noop']);
-
-        // Message Events
-        $this->eventHandler->on('event.MESSAGE_CREATE', function(MessageEvent $event){});
-        $this->eventHandler->on('event.MESSAGE_UPDATE', function(MessageEvent $event){});
-        $this->eventHandler->on('event.MESSAGE_DELETE', [$this, 'noop']);
-        $this->eventHandler->on('event.MESSAGE_DELETE_BULK', [$this, 'noop']);
-
-        $this->eventHandler->on('event.MESSAGE_REACTION_ADD', [$this, 'noop']);
-        $this->eventHandler->on('event.MESSAGE_REACTION_REMOVE', [$this, 'noop']);
-        $this->eventHandler->on('event.MESSAGE_REACTION_REMOVE_ALL', [$this, 'noop']);
-
-        // Other events.
-        $this->eventHandler->on('event.TYPING_START', [$this, 'noop']);
-        $this->eventHandler->on('event.PRESENCE_UPDATE', [$this, 'noop']);
-        $this->eventHandler->on('event.USER_UPDATE', [$this, 'noop']);
-        $this->eventHandler->on('event.VOICE_STATE_UPDATE', [$this, 'noop']);
-        $this->eventHandler->on('event.VOICE_SERVER_UPDATE', [$this, 'noop']);
-        $this->eventHandler->on('event.WEBHOOKS_UPDATE', [$this, 'noop']);
-        $this->eventHandler->on('event.MESSAGE_ACK', [$this, 'noop']);
     }
 
     public function log($message){
@@ -341,7 +282,6 @@ class DiscordClient {
     }
 
     public function gotReconnectRequest(int $shard, int $opcode, array $data){
-        // Requeue an identify message, and try again.
         $this->sendIdentify($shard);
     }
 
@@ -354,7 +294,7 @@ class DiscordClient {
     private function sendIdentify(int $shard){
         $identify = [];
         $identify["token"] = self::$token;
-        $identify["properties"] = ["os" => PHP_OS, 'browser' => 'erkamkahriman/dcbotapi', 'library' => 'erkamkahriman/dcbotapi'];
+        $identify["properties"] = ["os" => PHP_OS, "browser" => "erkamkahriman/dcbotapi", "library" => "erkamkahriman/dcbotapi"];
         $identify["compress"] = false;
         $identify["shard"] = [$shard, $this->gwInfo["shards"]];
         $this->slowMessageQueue[] = [$shard, 2, $identify];
@@ -426,6 +366,11 @@ class DiscordClient {
     }
 
     public function noop(DiscordClient $client, int $shard, string $event, array $data){
+        switch($event){
+            case "":
+                $this->log($event);
+                var_dump($data);
+        }
     }
 
     public function handleReadyEvent(int $shard){

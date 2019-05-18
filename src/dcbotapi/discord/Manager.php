@@ -11,8 +11,8 @@ use function is_callable;
 class Manager {
     private static $eventHandler;
 
-    public function __construct(){
-        self::$eventHandler = new EventHandler();
+    public function __construct(DiscordClient $client){
+        self::$eventHandler = new EventHandler($client);
     }
 
     public static function getRequest(string $endpoint, ?callable $gotResponse = null, string $type = 'GET', array $headers = []): Request{
