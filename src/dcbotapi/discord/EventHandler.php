@@ -11,7 +11,6 @@ class EventHandler extends EventEmitter {
         // Connection Handling
         $this->on("shard.closed", [$client, "shardClosed"]);
         $this->on("shard.message", [$client, "gotMessage"]);
-        //$this->on("shard.connected", [$client, "noop"]);
 
         // OPCode handling
         $this->on("opcode.0", [$client, "gotDispatch"]);

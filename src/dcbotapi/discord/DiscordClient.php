@@ -27,6 +27,7 @@ use function call_user_func_array;
 use function is_array;
 use function var_dump;
 use function date_default_timezone_set;
+use function is_callable;
 
 class DiscordClient {
     /** @var LoopInterface LoopInterface */
@@ -34,9 +35,7 @@ class DiscordClient {
     /** @var EventHandler $eventHandler */
     public $eventHandler;
 
-    public static $clientID = "";
-    public static $clientSecret = "";
-    public static $token = "";
+    public static $clientID = "", $clientSecret = "", $token = "";
 
     /** @var HTTPClient ?$httpClient */
     public static $httpClient = null;
@@ -60,6 +59,7 @@ class DiscordClient {
      */
     public function __construct($clientID, $clientSecret, $token){
         date_default_timezone_set("Europe/Berlin");
+
         new Manager($this);
         $this->eventHandler = Manager::getEventHandler();
 
@@ -229,10 +229,7 @@ class DiscordClient {
         $connector = new RatchetConnector($this->getLoopInterface());
 
         $connector($this->gwInfo["url"]."/?v=6&encoding=json")->then(function(WebSocket $conn) use ($shard){
-            $this->doEmit("DiscordClient.debugMessage", ["Connected shard: ".$shard]);
-
             $this->shards[$shard] = ["conn" => $conn, "seq" => null, "ready" => false];
-            $this->doEmit("shard.connected", [$shard]);
 
             $conn->on("message", function(RatchetMessageInterface $msg) use ($shard, $conn){
                 $this->doEmit("shard.message", [$shard, $msg]);
@@ -243,12 +240,7 @@ class DiscordClient {
             });
 
         }, function(Exception $e) use ($shard){
-            $this->doEmit("shard.connect.error", [$shard]);
-
-            $this->doEmit("DiscordClient.debugMessage", ["Could not connect shard ".$shard.": ".$e->getMessage()]);
-
             $this->getLoopInterface()->addTimer(30, function() use ($shard){
-                $this->doEmit("DiscordClient.debugMessage", ["Trying again to connect shard: ".$shard]);
                 $this->connectShard($shard);
             });
         });
@@ -256,14 +248,12 @@ class DiscordClient {
 
     public function sendShardMessage(int $shard, int $opcode, $data, $sequence = null, $eventName = null){
         $sendData = ["op" => $opcode, "d" => $data];
-        if($opcode == 0){
+        if($opcode === 0){
             $sendData["s"] = $sequence;
             $sendData["t"] = $eventName;
         }
 
-        /** @var WebSocket $conn */
-        $conn = $this->shards[$shard]["conn"];
-        $conn->send(json_encode($sendData));
+        $this->shards[$shard]["conn"]->send(json_encode($sendData));
     }
 
     public function gotMessage(int $shard, RatchetMessageInterface $msg){
@@ -282,6 +272,7 @@ class DiscordClient {
                 break;
             default:
                 $this->doEmit("opcode.".$opcode, [$shard, $opcode, $data]);
+                break;
         }
     }
 
@@ -300,11 +291,13 @@ class DiscordClient {
     }
 
     private function sendIdentify(int $shard){
-        $identify = [];
         $identify["token"] = self::$token;
         $identify["properties"] = ["os" => PHP_OS, "browser" => "erkamkahriman/dcbotapi", "library" => "erkamkahriman/dcbotapi"];
         $identify["compress"] = false;
         $identify["shard"] = [$shard, $this->gwInfo["shards"]];
+        if(isset($this->myInfo["Game"])){
+            $identify["presence"] = ["game" => ["name" => $this->myInfo["Game"]["Name"], "type" => $this->myInfo["Game"]["Type"]]];
+        }
         $this->slowMessageQueue[] = [$shard, 2, $identify];
     }
 
@@ -375,6 +368,7 @@ class DiscordClient {
                 break;
             default:
                 $eventHandler->emit($eventName, [$shard, $event, $eventData]);
+                break;
         }
     }
 
@@ -524,6 +518,11 @@ class DiscordClient {
 
     public function getUsername(): string{
         return $this->myInfo["username"];
+    }
+
+    public function setGame(string $game, int $type){
+        $this->myInfo["Game"]["Name"] = $game;
+        $this->myInfo["Game"]["Type"] = $type <= 2 ? $type : 0;
     }
 
     public function getGuildById(string $id): ?Guild{
