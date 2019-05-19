@@ -2,8 +2,6 @@
 
 namespace dcbotapi\discord;
 
-use function array_keys;
-use function array_values;
 use dcbotapi\discord\event\MessageEvent;
 use dcbotapi\discord\guild\Guild;
 use dcbotapi\discord\other\User;
@@ -21,7 +19,6 @@ use Exception;
 use function random_bytes;
 use function json_decode;
 use function json_encode;
-use function strlen;
 use function bin2hex;
 use function time;
 use function array_shift;
@@ -31,6 +28,7 @@ use function var_dump;
 use function date_default_timezone_set;
 use function is_callable;
 use function php_sapi_name;
+use function array_keys;
 
 class DiscordClient {
     /** @var LoopInterface LoopInterface */
@@ -508,6 +506,6 @@ class DiscordClient {
     }
 
     public function getGuilds(){
-        return array_keys($this->guilds);
+        return $this->guilds;
     }
 }
