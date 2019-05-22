@@ -262,7 +262,7 @@ class DiscordClient {
             $this->log("Got Unknown Message on shard ".$shard." - ".$opcode);
         }
 
-        $opcodeName = "opcode".$opcode;
+        $opcodeName = "opcode.".$opcode;
 
         switch($opcode){
             case 0:
@@ -375,8 +375,6 @@ class DiscordClient {
                 $eventHandler->emit($eventName, [$data["d"]]);
                 break;
             case "event.CHANNEL_CREATE":
-                $eventHandler->emit($eventName, [$shard, $eventData]);
-                break;
             case "event.CHANNEL_DELETE":
                 $eventHandler->emit($eventName, [$eventData]);
                 break;
@@ -424,7 +422,7 @@ class DiscordClient {
         }
     }
 
-    public function handleChannelCreate(int $shard, array $data){
+    public function handleChannelCreate(array $data){
         if($data["type"] === 0 && isset($data["guild_id"]) && isset($this->guilds[$data["guild_id"]])){
             $guildId = $data["guild_id"];
             $channelId = $data["id"];
@@ -444,8 +442,8 @@ class DiscordClient {
             $channelId = $data["id"];
             unset($this->getGuilds()[$guildId]->getTextChannels()[$channelId]);
         }elseif($data["type"] === 1){
-            $person = $data["recipients"][0];
-            unset($this->privateChannels[$person["id"]]);
+            $user = $data["recipients"][0];
+            unset($this->privateChannels[$user["id"]]);
         }
     }
 
