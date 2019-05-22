@@ -37,7 +37,7 @@ class User {
         $data = json_encode(["recipient_id" => $this->getId()]);
         $headers["content-length"] = strlen($data);
         $headers["content-type"] = "application/json";
-        Manager::getRequest("/users/@me/channels", function($data) use ($message){
+        Manager::getRequest("/users/@me/channels", function($data) use($message){
             $data = json_decode($data, true);
             if(!isset($data["id"])) return;
             $id = $data["id"];

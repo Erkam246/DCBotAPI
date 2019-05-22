@@ -32,13 +32,13 @@ class MessageChannel {
         $headers["content-length"] = strlen($message);
         $headers["content-type"] = "application/json";
         if($message instanceof EmbedMessage){
-            $sendMessage["embed"] = $message->toArray();
+            $sending["embed"] = $message->toArray();
         }else{
-            $sendMessage["content"] = $message;
+            $sending["content"] = $message;
         }
-        $msg = json_encode($sendMessage);
+        $msg = json_encode($sending);
         $headers["content-length"] = strlen($msg);
         $headers["content-type"] = "application/json";;
-        Manager::getRequest("/channels/".$this->getId()."/messages", null, "POST", $headers)->end($msg);
+        Manager::getRequest("/channels/".$this->getId()."/messages", null, "POST", $headers)->end($sending);
     }
 }

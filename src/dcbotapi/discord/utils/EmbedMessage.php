@@ -5,6 +5,8 @@ namespace dcbotapi\discord\utils;
 class EmbedMessage {
     private $embed = [];
 
+    public const MAX_TITLE = 256, MAX_DESC = 2048, MAX_FIELDS = 25, MAX_LEN = 6000;
+
     public function __construct(){
         $this->embed["timestamp"] = date("c");
     }

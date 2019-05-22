@@ -24,7 +24,7 @@ class EventHandler extends EventEmitter {
         $this->on("event.READY", [$client, "handleReadyEvent"]);
 
         // Channel Events
-        $this->on("event.CHANNEL_CREATE", [$client, "noop"]);
+        $this->on("event.CHANNEL_CREATE", [$client, "handleChannelCreate"]);
         $this->on("event.CHANNEL_UPDATE", [$client, "noop"]);
         $this->on("event.CHANNEL_DELETE", [$client, "handleChannelDelete"]);
         $this->on("event.CHANNEL_PINS_UPDATE", [$client, "noop"]);
