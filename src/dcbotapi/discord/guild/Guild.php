@@ -4,11 +4,11 @@ namespace dcbotapi\discord\guild;
 
 use dcbotapi\discord\Manager;
 use dcbotapi\discord\other\MessageChannel;
+
 use function json_encode;
 
 class Guild {
     private $data = [];
-
     /** @var Member[] $members */
     private $members = [];
     /** @var Role[] $roles */
@@ -73,8 +73,8 @@ class Guild {
         return $this->textchannels;
     }
 
-    public function getTextChannelById(string $id): MessageChannel{
-        return $this->textchannels[$id];
+    public function getTextChannelById(string $id): ?MessageChannel{
+        return isset($this->textchannels[$id]) ? $this->textchannels[$id] : null;
     }
 
     /**
@@ -94,7 +94,7 @@ class Guild {
     }
 
     public function getVoiceChannelById(string $id): VoiceChannel{
-        return $this->voicechannels[$id];
+        return isset($this->voicechannels[$id]) ? $this->voicechannels[$id] : null;
     }
 
     public function addMember(array $data){

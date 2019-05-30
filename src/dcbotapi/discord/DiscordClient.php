@@ -454,7 +454,7 @@ class DiscordClient {
             }
         }
     }
-    
+
     public function getChannelMessages(string $channel, callable $function){
         Manager::getRequest("/channels/".$channel."/messages", $function)->end();
     }
