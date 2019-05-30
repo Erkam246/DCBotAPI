@@ -2,7 +2,6 @@
 
 namespace dcbotapi\discord\other;
 
-use dcbotapi\discord\guild\Guild;
 use dcbotapi\discord\Manager;
 use dcbotapi\discord\utils\EmbedMessage;
 
@@ -18,7 +17,7 @@ class Message {
         $this->channel = $channel;
     }
 
-    public function getContent(){
+    public function getContent(): string{
         return $this->data["content"];
     }
 
@@ -34,12 +33,8 @@ class Message {
         return $this->channel;
     }
 
-    public function getGuild(): ?Guild{
-        return null;
-    }
-
-    public function delete(): void{
-        Manager::getRequest("/channels/{$this->getChannel()->getId()}/messages/".$this->getId(), null, "DELETE")->end();
+    public function delete(?callable $response = null): void{
+        Manager::getRequest("/channels/{$this->getChannel()->getId()}/messages/".$this->getId(), $response, "DELETE")->end();
     }
 
     public function edit($message): void{

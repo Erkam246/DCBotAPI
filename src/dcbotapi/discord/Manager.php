@@ -2,9 +2,10 @@
 
 namespace dcbotapi\discord;
 
-use Exception;
 use React\HttpClient\Request;
 use React\HttpClient\Response;
+
+use Exception;
 
 use function is_callable;
 

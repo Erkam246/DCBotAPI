@@ -5,7 +5,6 @@ namespace dcbotapi\discord;
 use dcbotapi\discord\event\MessageEvent;
 use dcbotapi\discord\guild\Guild;
 use dcbotapi\discord\other\MessageChannel;
-use dcbotapi\discord\other\User;
 
 use React\HttpClient\Client as HTTPClient;
 use React\EventLoop\Factory as EventLoopFactory;
@@ -25,7 +24,6 @@ use function time;
 use function array_shift;
 use function call_user_func_array;
 use function is_array;
-use function var_dump;
 use function date_default_timezone_set;
 use function is_callable;
 use function php_sapi_name;
@@ -37,10 +35,8 @@ class DiscordClient {
     public $eventHandler;
 
     public static $clientID = "", $clientSecret = "", $token = "";
-
     /** @var HTTPClient ?$httpClient */
     public static $httpClient = null;
-
     /** @var Guild[] $guilds */
     private $guilds = [];
     private $gwInfo = [], $myInfo = [], $shards = [], $slowMessageQueue = [], $privateChannels = [];
@@ -62,25 +58,20 @@ class DiscordClient {
         date_default_timezone_set("Europe/Berlin");
 
         new Manager($this);
-        $this->eventHandler = Manager::getEventHandler();
+        $this->eventHandler = $this->getEventHandler();
 
         self::$clientID = $clientID;
         self::$clientSecret = $clientSecret;
         self::$token = $token;
     }
 
-    public function log($message){
-        echo "Output > ".$message."\n";
-    }
-
-    //TODO replace characters
-    public function ColorLog($message, int $color){
+    public function log($message, $color = null){
         $colors = [1 => "0;34", 2 => "0;31", 3 => "1;32", 4 => "1;33"];
-        if(isset($colors[$color])){
-            echo "\033[".$colors[$color]."m".$message."\033[0m \n";
-        }else{
-            $this->log($message);
+        if($color !== null && isset($colors[$color])){
+            echo "Output > \033[".$colors[$color]."m".$message."\033[0m \n";
+            return;
         }
+        echo "Output > ".$message."\n";
     }
 
     private function reset(){
@@ -98,18 +89,16 @@ class DiscordClient {
     }
 
     private function doEmit(string $event, array $params = []){
-        Manager::getEventHandler()->emit($event, $params);
+        $this->getEventHandler()->emit($event, $params);
     }
 
     /**
-     * Set the message loop to use.
-     *
      * @param LoopInterface $loopInterface
      * @throws Exception
      */
     public function setLoopInterface(LoopInterface $loopInterface): void{
         if(self::$httpClient !== null){
-            throw new Exception("Already connected.");
+            throw new Exception("Already connected");
         }
 
         $this->loopInterface = $loopInterface;
@@ -125,7 +114,7 @@ class DiscordClient {
     }
 
     /**
-     * Connect to Discord.
+     * Connect to Discord
      *
      * @throws Exception
      */
@@ -205,7 +194,7 @@ class DiscordClient {
     }
 
     private function connectToGateway($shards = 1){
-        foreach($this->shards as &$item){
+        foreach($this->shards as $item){
             $item["conn"]->close();
             unset($item["heartbeat_interval"]);
         }
@@ -235,7 +224,7 @@ class DiscordClient {
             $this->getLoopInterface()->addTimer(30, function() use ($shard){
                 $this->connectShard($shard);
             });
-            $this->ColorLog($e->getMessage(), 2);
+            $this->log($e->getMessage(), 2);
         });
     }
 
@@ -255,7 +244,8 @@ class DiscordClient {
         $data = json_decode($msg->getPayload(), true);
         $opcode = $data["op"];
 
-        if(empty(Manager::getEventHandler()->listeners("opcode.".$opcode))){
+        $eventHandler = $this->getEventHandler();
+        if(empty($eventHandler->listeners("opcode.".$opcode))){
             $this->log("Got Unknown Message on shard ".$shard." - ".$opcode);
         }
 
@@ -263,20 +253,18 @@ class DiscordClient {
 
         switch($opcode){
             case 0:
-                $this->doEmit($opcodeName, [$shard, $data]);
+            case 10:
+                $eventHandler->emit($opcodeName, [$shard, $data]);
                 break;
             case 7:
             case 9:
-                $this->doEmit($opcodeName, [$shard]);
-                break;
-            case 10:
-                $this->doEmit($opcodeName, [$shard, $data]);
+                $eventHandler->emit($opcodeName, [$shard]);
                 break;
             case 11:
-                $this->doEmit($opcodeName);
+                $eventHandler->emit($opcodeName);
                 break;
             default:
-                $this->doEmit($opcodeName, [$shard, $opcode, $data]);
+                $eventHandler->emit($opcodeName, [$shard, $opcode, $data]);
                 break;
         }
     }
@@ -346,10 +334,10 @@ class DiscordClient {
 
         $eventName = "event.".$event;
 
-        if(empty(Manager::getEventHandler()->listeners($eventName))){
-            var_dump("Event not found: ".$event);
+        $eventHandler = $this->getEventHandler();
+        if(empty($eventHandler->listeners($eventName))){
+            $this->log("Event not found: ".$event);
         }
-        $eventHandler = Manager::getEventHandler();
         switch($eventName){
             case "event.MESSAGE_CREATE":
             case "event.MESSAGE_UPDATE":
@@ -379,15 +367,10 @@ class DiscordClient {
         }
     }
 
-    public function noop(int $shard, string $event, array $data){
-        switch($event){
-            case "":
-                $this->log($event);
-                var_dump($data);
-        }
+    public function noop(int $shard, string $event, array $data): void{
     }
 
-    public function handleReadyEvent(int $shard, array $guilds = []){
+    public function handleReadyEvent(int $shard, array $guilds = []): void{
         $this->shards[$shard]["ready"] = true;
         foreach($guilds as $guild){
             $id = $guild["id"];
@@ -407,7 +390,7 @@ class DiscordClient {
         $this->getGuildById($data["guild_id"])->addMember($data);
     }
 
-    public function handleGuildMemberRemove($data){
+    public function handleGuildMemberRemove($data): void{
         $this->getGuildById($data["guild_id"])->removeMember($data["user"]["id"]);
     }
 
@@ -417,7 +400,7 @@ class DiscordClient {
         }
     }
 
-    public function handleChannelCreate(array $data){
+    public function handleChannelCreate(array $data): void{
         if($data["type"] === 0 && isset($data["guild_id"]) && isset($this->guilds[$data["guild_id"]])){
             $guildId = $data["guild_id"];
             $channelId = $data["id"];
@@ -431,7 +414,7 @@ class DiscordClient {
         }
     }
 
-    public function handleChannelDelete(array $data){
+    public function handleChannelDelete(array $data): void{
         if($data["type"] === 0 && isset($data["guild_id"]) && isset($this->guilds[$data["guild_id"]])){
             $guildId = $data["guild_id"];
             $channelId = $data["id"];
@@ -442,11 +425,11 @@ class DiscordClient {
         }
     }
 
-    public function shardClosed(int $shard, $code = null, $reason = null){
+    public function shardClosed(int $shard, $code = null, $reason = null): void{
         $this->log("Shard ".$shard." closed (".$code." - ".$reason.")");
         if(!$this->disconnecting){
             if($code == 4003 || $code == 4004){
-                $this->ColorLog("Authentication ERROR - not attempting to reconnect", 2);
+                $this->log("Authentication ERROR - not attempting to reconnect", 2);
             }else{
                 $this->getLoopInterface()->addTimer(3, function() use($shard){
                     $this->connectShard($shard);
@@ -455,7 +438,7 @@ class DiscordClient {
         }
     }
 
-    public function getChannelMessages(string $channel, callable $function){
+    public function getChannelMessages(string $channel, callable $function): void{
         Manager::getRequest("/channels/".$channel."/messages", $function)->end();
     }
 
@@ -469,5 +452,9 @@ class DiscordClient {
 
     public function getGuilds(){
         return $this->guilds;
+    }
+
+    public function getEventHandler(): EventHandler{
+        return Manager::getEventHandler();
     }
 }

@@ -11,7 +11,6 @@ class EventHandler extends EventEmitter {
         // Connection Handling
         $this->on("shard.closed", [$client, "shardClosed"]);
         $this->on("shard.message", [$client, "gotMessage"]);
-
         // OPCode handling
         $this->on("opcode.0", [$client, "gotDispatch"]);
         $this->on("opcode.1", [$client, "gotHeartbeat"]);
@@ -19,16 +18,13 @@ class EventHandler extends EventEmitter {
         $this->on("opcode.9", [$client, "gotInvalidSession"]);
         $this->on("opcode.10", [$client, "gotHello"]);
         $this->on("opcode.11", [$client, "gotHeartBeatAck"]);
-
         // General Server Events
         $this->on("event.READY", [$client, "handleReadyEvent"]);
-
         // Channel Events
         $this->on("event.CHANNEL_CREATE", [$client, "handleChannelCreate"]);
         $this->on("event.CHANNEL_UPDATE", [$client, "noop"]);
         $this->on("event.CHANNEL_DELETE", [$client, "handleChannelDelete"]);
         $this->on("event.CHANNEL_PINS_UPDATE", [$client, "noop"]);
-
         // Guild Events
         $this->on("event.GUILD_CREATE", [$client, "handleGuildData"]);
         $this->on("event.GUILD_UPDATE", [$client, "handleGuildData"]);
@@ -44,7 +40,6 @@ class EventHandler extends EventEmitter {
         $this->on("event.GUILD_BAN_REMOVE", [$client, "noop"]);
         $this->on("event.GUILD_EMOJIS_UPDATE", [$client, "noop"]);
         $this->on("event.GUILD_INTEGRATIONS_UPDATE", [$client, "noop"]);
-
         // Message Events
         $this->on("event.MESSAGE_CREATE", function(MessageEvent $event){});
         $this->on("event.MESSAGE_UPDATE", function(MessageEvent $event){});
@@ -53,7 +48,6 @@ class EventHandler extends EventEmitter {
         $this->on("event.MESSAGE_REACTION_ADD", [$client, "noop"]);
         $this->on("event.MESSAGE_REACTION_REMOVE", [$client, "noop"]);
         $this->on("event.MESSAGE_REACTION_REMOVE_ALL", [$client, "noop"]);
-
         // Other events
         $this->on("event.PRESENCE_UPDATE", [$client, "noop"]);
         $this->on("event.TYPING_START", [$client, 'noop']);

@@ -25,7 +25,7 @@ try{
 }catch(Exception $ignore){
 }
 
-$event = $client->eventHandler;
+$event = $client->getEventHandler();
 
 $event->on("event.READY", function() use($client){
     $client->log("Bot is ready.");
