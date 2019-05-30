@@ -2,7 +2,9 @@
 
 namespace dcbotapi\discord\guild;
 
+use dcbotapi\discord\Manager;
 use dcbotapi\discord\other\MessageChannel;
+use function json_encode;
 
 class Guild {
     private $data = [];
@@ -43,6 +45,10 @@ class Guild {
         return $this->data["name"];
     }
 
+    public function setName(string $name){
+        Manager::getRequest("/guilds/".$this->getId(), null, "PATCH")->end(json_encode(["name" => $name]));
+    }
+
     public function getId(){
         $this->data["id"];
     }
@@ -69,6 +75,18 @@ class Guild {
 
     public function getTextChannelById(string $id): MessageChannel{
         return $this->textchannels[$id];
+    }
+
+    /**
+     * @param $data
+     * @internal
+     */
+    public function addTextChannel(array $data){
+        $this->textchannels[$data["id"]] = new MessageChannel($data);
+    }
+
+    public function createTextChannel(string $name){
+        Manager::getRequest("guilds/".$this->getId()."/channels", null, "POST")->end(json_encode(["name" => $name]));
     }
 
     public function getVoiceChannels(){

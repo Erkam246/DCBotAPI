@@ -90,7 +90,7 @@ class DiscordClient {
         $this->myInfo = [];
         $this->shards = [];
         $this->guilds = [];
-        $this->personChannels = [];
+        $this->privateChannels = [];
         $this->connectTime = 0;
         $this->slowMessageQueue = [];
         $this->slowMessageTimerID = "";
@@ -144,6 +144,7 @@ class DiscordClient {
         if($this->loopInterface === null){
             $startLoop = true;
             $this->loopInterface = EventLoopFactory::create();
+            $this->loopInterface->run();
         }
 
         self::$httpClient = new HTTPClient($this->loopInterface);
@@ -154,11 +155,7 @@ class DiscordClient {
 
         Manager::getRequest("/gateway/bot", function($data){
             $this->gwInfo = json_decode($data, true);
-            if(isset($this->gwInfo["shards"])){
-                $this->connectToGateway($this->gwInfo["shards"]);
-            }else{
-                $this->log("Unknown response from API");
-            }
+            isset($this->gwInfo["shards"]) ? $this->connectToGateway($this->gwInfo["shards"]) : $this->log("Unknown response from API");
         })->end();
 
         $slowMessageTimerID = bin2hex(random_bytes(16));
@@ -368,8 +365,6 @@ class DiscordClient {
                 break;
             case "event.GUILD_CREATE":
             case "event.GUILD_UPDATE":
-                $eventHandler->emit($eventName, [$data["d"]]);
-                break;
             case "event.GUILD_MEMBER_ADD":
             case "event.GUILD_MEMBER_REMOVE":
                 $eventHandler->emit($eventName, [$data["d"]]);
@@ -426,9 +421,9 @@ class DiscordClient {
         if($data["type"] === 0 && isset($data["guild_id"]) && isset($this->guilds[$data["guild_id"]])){
             $guildId = $data["guild_id"];
             $channelId = $data["id"];
-            if(isset($this->guilds[$guildId]["channels"][$channelId])) return;
-            $this->guilds[$guildId]["channels"][$channelId] = [];
-            $this->guilds[$guildId]["channels"][$channelId]["name"] = $data["name"];
+            $guild = $this->getGuildById($guildId);
+            if(!$guild->getTextChannelById($channelId) instanceof MessageChannel) return;
+            $guild->addTextChannel($data);
         }elseif($data["type"] === 1){
             $user = $data["recipients"][0];
             if(isset($this->privateChannels[$user["id"]])) return;
@@ -459,15 +454,7 @@ class DiscordClient {
             }
         }
     }
-
-    public function validUser(): bool{
-        return true;
-    }
-
-    public function getUserById(): User{
-        return new User([]);
-    }
-
+    
     public function getChannelMessages(string $channel, callable $function){
         Manager::getRequest("/channels/".$channel."/messages", $function)->end();
     }
