@@ -48,7 +48,7 @@ class EventHandler extends EventEmitter {
         $this->on("event.MESSAGE_REACTION_ADD", [$client, "noop"]);
         $this->on("event.MESSAGE_REACTION_REMOVE", [$client, "noop"]);
         $this->on("event.MESSAGE_REACTION_REMOVE_ALL", [$client, "noop"]);
-        // Other events
+        // Other Events
         $this->on("event.PRESENCE_UPDATE", [$client, "noop"]);
         $this->on("event.TYPING_START", [$client, 'noop']);
         $this->on("event.USER_UPDATE", [$client, "noop"]);

@@ -2,18 +2,16 @@
 
 namespace dcbotapi\discord;
 
+use dcbotapi\discord\event\ChannelEvent;
 use dcbotapi\discord\event\MessageEvent;
 use dcbotapi\discord\guild\Guild;
 use dcbotapi\discord\other\MessageChannel;
-
 use React\HttpClient\Client as HTTPClient;
 use React\EventLoop\Factory as EventLoopFactory;
 use React\EventLoop\LoopInterface;
-
 use Ratchet\Client\Connector as RatchetConnector;
 use Ratchet\Client\WebSocket;
 use Ratchet\RFC6455\Messaging\MessageInterface as RatchetMessageInterface;
-
 use Exception;
 
 use function random_bytes;
@@ -27,6 +25,7 @@ use function is_array;
 use function date_default_timezone_set;
 use function is_callable;
 use function php_sapi_name;
+use function var_dump;
 
 class DiscordClient {
     /** @var LoopInterface LoopInterface */
@@ -115,15 +114,18 @@ class DiscordClient {
 
     /**
      * Connect to Discord
-     *
-     * @throws Exception
      */
     public function connect(){
         if(php_sapi_name() !== "cli"){
-            throw new Exception("Please run this Script via CLI.");
+            $this->log("Please run the Bot on Command Line", 2);
+            $this->disconnect();
+            return;
         }
+
         if(self::$httpClient !== null){
-            throw new Exception("Already connected.");
+            $this->log("Bot is already running", 2);
+            $this->disconnect();
+            return;
         }
 
         $this->reset();
@@ -329,6 +331,7 @@ class DiscordClient {
 
     public function gotDispatch(int $shard, array $data){
         $this->shards[$shard]["seq"] = $data["s"];
+
         $event = $data["t"];
         $eventData = $data["d"];
 

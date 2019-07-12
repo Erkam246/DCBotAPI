@@ -15,7 +15,7 @@ $credit = [
 ];
 
 $client = new DiscordClient($credit["ClientID"], $credit["ClientSecret"], $credit["Token"]);
-$client->ColorLog("Discord invite link: https://discordapp.com/oauth2/authorize?client_id=".$credit["ClientID"]."&scope=bot&permissions=0", 4);
+$client->log("Discord invite link: https://discordapp.com/oauth2/authorize?client_id=".$credit["ClientID"]."&scope=bot&permissions=0", 4);
 $client->log("Starting Bot...");
 
 $loop = Factory::create();
@@ -79,7 +79,7 @@ $event->on("event.MESSAGE_UPDATE", function(MessageEvent $event) use($client){
     $author = $event->getAuthor();
     $msg = $event->getMessage();
     if(!$author->isBot()){
-        $client->Colorlog("UPDATE: ".$author->getUsername()." => ".$msg->getContent(), 2);
+        $client->log("UPDATE: ".$author->getUsername()." => ".$msg->getContent(), 2);
     }
 });
 
