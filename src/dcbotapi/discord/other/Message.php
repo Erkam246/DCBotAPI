@@ -11,6 +11,8 @@ use function strlen;
 class Message {
     private $data = [], $author, $channel;
 
+    public const MAX_LENGHT = 2000;
+
     public function __construct(array $data, MessageChannel $channel){
         $this->data = $data;
         $this->author = new User($data["author"]);
@@ -34,11 +36,12 @@ class Message {
     }
 
     public function delete(?callable $response = null): void{
-        Manager::getRequest("/channels/{$this->getChannel()->getId()}/messages/".$this->getId(), $response, "DELETE")->end();
+        Manager::getRequest("channels/{$this->getChannel()->getId()}/messages/".$this->getId(), $response, "DELETE")->end();
     }
 
     public function edit($message): void{
         if(empty($message)) return;
+        if(strlen($message) >= self::MAX_LENGHT) return;
         $headers["content-length"] = strlen($message);
         $headers["content-type"] = "application/json";
         if($message instanceof EmbedMessage){
@@ -47,6 +50,10 @@ class Message {
             $sending["content"] = $message;
         }
         $msg = json_encode($sending);
-        Manager::getRequest("/channels/{$this->getChannel()->getId()}/messages/".$this->getId(), null, "PATCH", $headers)->end($msg);
+        Manager::getRequest("channels/{$this->getChannel()->getId()}/messages/".$this->getId(), null, "PATCH", $headers)->end($msg);
+    }
+
+    public function deleteReactions(?callable $response = null): void{
+        Manager::getRequest("channels/{$this->getChannel()->getId()}/messages/".$this->getId()."/reactions", $response, "DELETE")->end();
     }
 }

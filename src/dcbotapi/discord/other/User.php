@@ -10,7 +10,7 @@ use function json_encode;
 use function strlen;
 
 class User {
-    public $data = [];
+    private $data = [];
 
     public function __construct(array $data){
         $this->data = $data;
@@ -34,10 +34,11 @@ class User {
 
     public function sendMessage($message): void{
         if(empty($message)) return;
+        if(strlen($message) >= Message::MAX_LENGHT) return;
         $data = json_encode(["recipient_id" => $this->getId()]);
         $headers["content-length"] = strlen($data);
         $headers["content-type"] = "application/json";
-        Manager::getRequest("/users/@me/channels", function($data) use($message){
+        Manager::getRequest("users/@me/channels", function($data) use($message){
             $data = json_decode($data, true);
             if(!isset($data["id"])) return;
             $id = $data["id"];
@@ -50,7 +51,7 @@ class User {
             $headers = [];
             $headers["content-length"] = strlen($data);
             $headers["content-type"] = "application/json";;
-            Manager::getRequest("/channels/".$id."/messages", null, "POST", $headers)->end($data);
+            Manager::getRequest("channels/".$id."/messages", null, "POST", $headers)->end($data);
         }, "POST", $headers)->end($data);
     }
 }

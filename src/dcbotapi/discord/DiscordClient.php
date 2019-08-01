@@ -140,11 +140,11 @@ class DiscordClient {
 
         self::$httpClient = new HTTPClient($this->loopInterface);
 
-        Manager::getRequest("/users/@me", function($data){
+        Manager::getRequest("users/@me", function($data){
             $this->myInfo = json_decode($data, true);
         })->end();
 
-        Manager::getRequest("/gateway/bot", function($data){
+        Manager::getRequest("gateway/bot", function($data){
             $this->gwInfo = json_decode($data, true);
             isset($this->gwInfo["shards"]) ? $this->connectToGateway($this->gwInfo["shards"]) : $this->log("Unknown response from API");
         })->end();
@@ -346,7 +346,7 @@ class DiscordClient {
             case "event.MESSAGE_UPDATE":
                 if(!isset($eventData["author"])) return;
                 $channelId = $eventData["channel_id"];
-                Manager::getRequest("/channels/".$channelId, function($channelData) use($eventData, $eventName, $eventHandler){
+                Manager::getRequest("channels/".$channelId, function($channelData) use($eventData, $eventName, $eventHandler){
                     $messageEvent = new MessageEvent($eventData, json_decode($channelData, true));
                     $eventHandler->emit($eventName, [$messageEvent]);
                 })->end();
@@ -377,7 +377,7 @@ class DiscordClient {
         $this->shards[$shard]["ready"] = true;
         foreach($guilds as $guild){
             $id = $guild["id"];
-            Manager::getRequest("/guilds/".$id, function($data) use ($id){
+            Manager::getRequest("guilds/".$id, function($data) use ($id){
                 if(!isset($this->guilds[$id])){
                     $this->guilds[$id] = new Guild(json_decode($data, true));
                 }
@@ -442,7 +442,7 @@ class DiscordClient {
     }
 
     public function getChannelMessages(string $channel, callable $function): void{
-        Manager::getRequest("/channels/".$channel."/messages", $function)->end();
+        Manager::getRequest("channels/".$channel."/messages", $function)->end();
     }
 
     public function getUsername(): string{

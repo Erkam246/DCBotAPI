@@ -46,7 +46,7 @@ class Guild {
     }
 
     public function setName(string $name){
-        Manager::getRequest("/guilds/".$this->getId(), null, "PATCH")->end(json_encode(["name" => $name]));
+        Manager::getRequest("guilds/".$this->getId(), null, "PATCH")->end(json_encode(["name" => $name]));
     }
 
     public function getId(){

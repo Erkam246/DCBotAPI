@@ -20,7 +20,7 @@ class Manager {
     public static function getRequest(string $endpoint, ?callable $gotResponse = null, string $type = "GET", array $headers = []): Request{
         $headers["User-Agent"] = "ErkamKahriman/DCBotAPI (https://github.com/ErkamKahriman/DCBotAPI, 1.0)";
         $headers["Authorization"] = "Bot ".DiscordClient::$token;
-        $url = "https://discordapp.com/api/v6".$endpoint;
+        $url = "https://discordapp.com/api/v6/".$endpoint;
         $request = DiscordClient::$httpClient->request($type, $url, $headers);
         if(is_callable($gotResponse)){
             $request->on("response", function(Response $response) use ($gotResponse){

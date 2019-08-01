@@ -32,7 +32,7 @@ class Member {
         return $this->data["deaf"];
     }
 
-    public function getUser(){
+    public function getUser(): User{
         return $this->user;
     }
 }

@@ -39,6 +39,6 @@ class MessageChannel {
         $msg = json_encode($sending);
         $headers["content-length"] = strlen($msg);
         $headers["content-type"] = "application/json";;
-        Manager::getRequest("/channels/".$this->getId()."/messages", null, "POST", $headers)->end($msg);
+        Manager::getRequest("channels/".$this->getId()."/messages", null, "POST", $headers)->end($msg);
     }
 }
